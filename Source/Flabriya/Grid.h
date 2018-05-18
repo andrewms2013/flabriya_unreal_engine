@@ -18,9 +18,20 @@ struct FTileType
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		class UPaperSprite * TileSprite;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UPaperSprite * TilePressedSprite;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool IsBomb;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool IsUnmovable;
+
 	FTileType()
 	{
 		Probability = 1.0f;
+		bool IsBomb = false;
+		bool IsUnmovable = false;
 	}
 };
 
@@ -45,15 +56,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Initialization)
 		void InitGrid();
 
-		ATile* CurrentlySelectedTile;
+	ATile* CurrentlySelectedTile;
 
-		TArray<ATile*> TilesToDel;
+	TArray<ATile*> TilesToDel;
 
-		TArray<ATile*> TilesAreBeingMoved;
+	TArray<ATile*> TilesAreBeingMoved;
 
-		bool SwapHappening = false;
+	bool SwapHappening = false;
 
-		bool FallHappening = false;
+	bool FallHappening = false;
 
 	// Vector = 1/30 of TileSize;
 
@@ -62,21 +73,23 @@ public:
 	FVector MoveTileRight;
 	FVector MoveTileLeft;
 
-	const int TileSpeed = 15;
-
 	virtual void Tick(float DeltaTime) override;
 
 	int SelectTileFromLibrary();
 
-	ATile* CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation, int SpawnGridAddress, int TileTypeID);
+	ATile* CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation, int SpawnGridAddress, int TileTypeID, bool IsBomb, bool IsUnmovable);
 
 	FVector GetTileCoordinates(int GridAdress);
 
 	void TileMousePressed(ATile* Current);
 
-	bool AreNegihbors(ATile* First, ATile* Second);
+	bool AreValidAndNegihbors(int InitialFirstPosition, int InitialSecondPosition);
 
-	void TryToSwap(ATile* First, ATile* Second);
+	void SwapTilePositionsInArray(ATile* First, ATile* Second);
+
+	bool IsValidMove(ATile* First, ATile* Second);
+
+	void SwapTilesInGame(ATile* First, ATile* Second);
 
 	void GetMatchedTilesInColoumnOrRow(int Coloumn, bool IsColoumn);
 
@@ -89,4 +102,20 @@ public:
 	void SpawnNewTiles();
 
 	void CheckForMatches();
+
+	// Lower value -> Faster
+
+	const int TileSpeed = 7;
+
+	void BombExplode(ATile* Pressed);
+
+	bool IsWinnable();
+
+	bool CheckMoveForValidityAndSwapBack(int InitialFirstPosition, int InitialSecondPosition);
+
+private:
+
+	int BombsCounter = 0;
+
+	void CopyCurrentToDeleting(TArray<ATile*> CurrentTiles);
 };

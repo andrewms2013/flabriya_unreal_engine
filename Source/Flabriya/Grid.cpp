@@ -20,15 +20,22 @@ void AGrid::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (FallHappening) {
-		if (TilesAreBeingMoved.Num() == 0) {
+	if (FallHappening) 
+	{
+		if (TilesAreBeingMoved.Num() == 0) 
+		{
 			FallHappening = false;
 			SpawnNewTiles();
+			if (!IsWinnable()) {
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString("Is Unwinnable"));
+			}
 			CheckForMatches();
 		}
 	}
-	if (SwapHappening) {
-		if (TilesAreBeingMoved.Num() == 0) {
+	if (SwapHappening) 
+	{
+		if (TilesAreBeingMoved.Num() == 0)
+		{
 			SwapHappening = false;
 			DestroyTiles();
 		}
@@ -36,7 +43,7 @@ void AGrid::Tick(float DeltaTime)
 
 }
 
-ATile* AGrid::CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation, int SpawnGridAddress, int TileTypeID)
+ATile* AGrid::CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation, int SpawnGridAddress, int TileTypeID, bool IsBomb, bool IsUnmovable)
 {
 	if (TileClass) {
 		UWorld* const World = GetWorld();
@@ -51,6 +58,8 @@ ATile* AGrid::CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation,
 		NewTile->SetTileSprite(TileSprite);
 		NewTile->GridAddress = SpawnGridAddress;
 		NewTile->TicksToMove = 0;
+		NewTile->IsBomb = IsBomb;
+		NewTile->IsUnmovable = IsUnmovable;
 		NewTile->Grid = this;
 		GameTiles[SpawnGridAddress] = NewTile;
 		return NewTile;
@@ -60,7 +69,7 @@ ATile* AGrid::CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation,
 
 void AGrid::InitGrid()
 {
-	GameTiles.Empty(8 * 8);
+	GameTiles.Empty(64);
 	GameTiles.AddZeroed(GameTiles.Max());
 	FVector SpawnLocation;
 	int TileID = 0;
@@ -71,10 +80,10 @@ void AGrid::InitGrid()
 		{
 			SpawnLocation = GetTileCoordinates(GridAddress);
 			TileID = SelectTileFromLibrary();
-			while (TileCompletesMatchOnStart(GridAddress, TileID)) {
+			while (TileCompletesMatchOnStart(GridAddress, TileID) || TileLibrary[TileID].IsBomb || TileLibrary[TileID].IsUnmovable) {
 				TileID = SelectTileFromLibrary();
 			}
-			CreateTile(TileLibrary[TileID].TileSprite, SpawnLocation, GridAddress, TileID);
+			CreateTile(TileLibrary[TileID].TileSprite, SpawnLocation, GridAddress, TileID, TileLibrary[TileID].IsBomb, TileLibrary[TileID].IsUnmovable);
 			GridAddress++;
 		}
 	}
@@ -91,22 +100,22 @@ FVector AGrid::GetTileCoordinates(int GridAdress)
 	FVector SpawnCoordinates = GetActorLocation();
 	if (Column < 4)
 	{
-		float XOffset = 37.5f + 75.f * (3 - Column);
+		float XOffset = 37.5 + 75.0 * (3 - Column);
 		SpawnCoordinates.X -= XOffset;
 	}
 	else 
 	{
-		float XOffset = 37.5f + 75.f * (Column - 4);
+		float XOffset = 37.5 + 75.0 * (Column - 4);
 		SpawnCoordinates.X += XOffset;
 	}
 	if(Row < 4)
 	{
-		float ZOffset = 37.5f + 75.f * (3 - Row);
+		float ZOffset = 37.5 + 75.0 * (3 - Row);
 		SpawnCoordinates.Z += ZOffset;
 	}
 	else 
 	{
-		float ZOffset = 37.5f + 75.f * (Row - 4);
+		float ZOffset = 37.5 + 75.0 * (Row - 4);
 		SpawnCoordinates.Z -= ZOffset;
 	}
 	return SpawnCoordinates;
@@ -134,34 +143,56 @@ int AGrid::SelectTileFromLibrary()
 
 void AGrid::TileMousePressed(ATile* Pressed)
 {
-	if (CurrentlySelectedTile != nullptr) {
-		if (AreNegihbors(CurrentlySelectedTile, Pressed)) {
-			TryToSwap(CurrentlySelectedTile, Pressed);
+	if (Pressed->IsUnmovable || Pressed->IsBomb) 
+	{
+		if (CurrentlySelectedTile != nullptr)
+		{
+			CurrentlySelectedTile->SetTileSprite(TileLibrary[CurrentlySelectedTile->TileTypeID].TileSprite);
+			CurrentlySelectedTile = nullptr;
 		}
+		if (Pressed->IsBomb) 
+		{
+			BombExplode(Pressed);
+		}
+		return;
+	}
+	if (CurrentlySelectedTile != nullptr) 
+	{
+		if (AreValidAndNegihbors(Pressed->GridAddress, CurrentlySelectedTile->GridAddress))
+		{
+			if (IsValidMove(CurrentlySelectedTile, Pressed)) {
+				SwapTilesInGame(CurrentlySelectedTile, Pressed);
+			}
+			else {
+				SwapTilePositionsInArray(CurrentlySelectedTile, Pressed);
+			}
+		}
+		CurrentlySelectedTile->SetTileSprite(TileLibrary[CurrentlySelectedTile->TileTypeID].TileSprite);
 		CurrentlySelectedTile = nullptr;
 		return;
 	}
+	Pressed->SetTileSprite(TileLibrary[Pressed->TileTypeID].TilePressedSprite);
 	CurrentlySelectedTile = Pressed;
 }
 
-bool AGrid::AreNegihbors(ATile* First, ATile* Second) {
-	int InitialFirstPosition = First->GridAddress;
-	int InitialSecondPosition = Second->GridAddress;
-	int Offset = FMath::Abs(InitialFirstPosition - InitialSecondPosition);
-	if (Offset == 1 || Offset == 8) {
-		return true;
+bool AGrid::AreValidAndNegihbors(int InitialFirstPosition, int InitialSecondPosition)
+{
+	if (InitialFirstPosition < 64 && InitialFirstPosition >= 0 && InitialSecondPosition < 64 && InitialSecondPosition >= 0) 
+	{
+		int Offset = FMath::Abs(InitialFirstPosition - InitialSecondPosition);
+		if (Offset == 1 || Offset == 8)
+		{
+			return true;
+		}
 	}
 	return false;
 }
 
-void AGrid::TryToSwap(ATile* First, ATile* Second) 
+bool AGrid::IsValidMove(ATile* First, ATile* Second) 
 {
 	int InitialFirstPosition = First->GridAddress;
 	int InitialSecondPosition = Second->GridAddress;
-	First->GridAddress = InitialSecondPosition;
-	Second->GridAddress = InitialFirstPosition;
-	GameTiles[InitialFirstPosition] = Second;
-	GameTiles[InitialSecondPosition] = First;
+	SwapTilePositionsInArray(First, Second);
 	if (FMath::Abs(InitialFirstPosition - InitialSecondPosition) == 1) 
 	{
 		int RowFirst = InitialFirstPosition % 8;
@@ -180,38 +211,46 @@ void AGrid::TryToSwap(ATile* First, ATile* Second)
 		GetMatchedTilesInColoumnOrRow(ColoumnFirst, true);
 		GetMatchedTilesInColoumnOrRow(ColoumnSecond, true);
 	}
-	if (TilesToDel.Num() == 0)
+	return(TilesToDel.Num() != 0);
+}
+
+void AGrid::SwapTilesInGame(ATile* First, ATile* Second) {
+	int Offset = First->GridAddress - Second->GridAddress;
+	TilesAreBeingMoved.Add(First);
+	TilesAreBeingMoved.Add(Second);
+	if (Offset == 1)
 	{
-		First->GridAddress = InitialFirstPosition;
-		Second->GridAddress = InitialSecondPosition;
-		GameTiles[InitialFirstPosition] = First;
-		GameTiles[InitialSecondPosition] = Second;
+		First->MoveVector = MoveTileDown;
+		Second->MoveVector = MoveTileUp;
 	}
-	else 
+	else if (Offset == -1)
 	{
-		int Offset = First->GridAddress - Second->GridAddress;
-		TilesAreBeingMoved.Add(First);
-		TilesAreBeingMoved.Add(Second);
-		if (Offset == 1) {
-			First->MoveVector = MoveTileDown;
-			Second->MoveVector = MoveTileUp;
-		}
-		else if (Offset == -1){
-			First->MoveVector = MoveTileUp;
-			Second->MoveVector = MoveTileDown;
-		}
-		else if (Offset == 8) {
-			First->MoveVector = MoveTileRight;
-			Second->MoveVector = MoveTileLeft;
-		}
-		else {
-			First->MoveVector = MoveTileLeft;
-			Second->MoveVector = MoveTileRight;
-		}
-		First->TicksToMove = TileSpeed;
-		Second->TicksToMove = TileSpeed;
-		SwapHappening = true;
+		First->MoveVector = MoveTileUp;
+		Second->MoveVector = MoveTileDown;
 	}
+	else if (Offset == 8)
+	{
+		First->MoveVector = MoveTileRight;
+		Second->MoveVector = MoveTileLeft;
+	}
+	else
+	{
+		First->MoveVector = MoveTileLeft;
+		Second->MoveVector = MoveTileRight;
+	}
+	First->TicksToMove = TileSpeed;
+	Second->TicksToMove = TileSpeed;
+	SwapHappening = true;
+}
+
+void AGrid::SwapTilePositionsInArray(ATile* First, ATile* Second) 
+{
+	int InitialFirstPosition = First->GridAddress;
+	int InitialSecondPosition = Second->GridAddress;
+	First->GridAddress = InitialSecondPosition;
+	Second->GridAddress = InitialFirstPosition;
+	GameTiles[InitialFirstPosition] = Second;
+	GameTiles[InitialSecondPosition] = First;
 }
 
 void AGrid::CheckForMatches()
@@ -247,6 +286,16 @@ void AGrid::GetMatchedTilesInColoumnOrRow(int Index, bool IsColoumn)
 	{
 		if (GameTiles[i] != nullptr) 
 		{
+			if (GameTiles[i]->IsBomb || GameTiles[i]->IsUnmovable) 
+			{
+				if (SameTilesCounter > 2)
+				{
+					CopyCurrentToDeleting(CurrentTiles);
+				}
+				CurrentTiles.Empty();
+				SameTilesCounter = 0;
+				continue;
+			}
 			if (SameTilesCounter == 0) 
 			{
 				CurrentTiles.Add(GameTiles[i]);
@@ -263,12 +312,7 @@ void AGrid::GetMatchedTilesInColoumnOrRow(int Index, bool IsColoumn)
 				{
 					if (SameTilesCounter > 2)
 					{
-						for (ATile* TileToDel : CurrentTiles) 
-						{
-							if (!TilesToDel.Contains(TileToDel)) {
-								TilesToDel.Add(TileToDel);
-							}
-						}
+						CopyCurrentToDeleting(CurrentTiles);
 					}
 					CurrentTiles.Empty();
 					CurrentTiles.Add(GameTiles[i]);
@@ -281,7 +325,8 @@ void AGrid::GetMatchedTilesInColoumnOrRow(int Index, bool IsColoumn)
 	{
 		for (ATile* TileToDel : CurrentTiles) 
 		{
-			if (!TilesToDel.Contains(TileToDel)) {
+			if (!TilesToDel.Contains(TileToDel)) 
+			{
 				TilesToDel.Add(TileToDel);
 			}
 		}
@@ -314,10 +359,14 @@ void AGrid::DestroyTiles()
 	for (ATile* TileToDel : TilesToDel) 
 	{
 		int AddressOfTileToDestroy = TileToDel->GridAddress;
-		if (TilesAreBeingMoved.Contains(TileToDel)) {
+		if (TilesAreBeingMoved.Contains(TileToDel)) 
+		{
 			TilesAreBeingMoved.Remove(TileToDel);
 		}
 		GameTiles[AddressOfTileToDestroy] = nullptr;
+		if (TileToDel->IsBomb) {
+			BombsCounter--;
+		}
 		TileToDel->Destroy();
 		ShiftTiles(AddressOfTileToDestroy);
 	}
@@ -330,7 +379,8 @@ void AGrid::ShiftTiles(int AddressWithNoTile)
 	{
 		int AddressOfUpperTile = AddressWithNoTile - 1;
 		if (GameTiles[AddressOfUpperTile] != nullptr) {
-			if (!TilesAreBeingMoved.Contains(GameTiles[AddressOfUpperTile])) {
+			if (!TilesAreBeingMoved.Contains(GameTiles[AddressOfUpperTile])) 
+			{
 				TilesAreBeingMoved.Add(GameTiles[AddressOfUpperTile]);
 			}
 			GameTiles[AddressOfUpperTile]->MoveVector = MoveTileDown;
@@ -349,10 +399,87 @@ void AGrid::SpawnNewTiles()
 {
 	for (int i = 0; i < 63; i++)
 	{
-		if (GameTiles[i] == nullptr) {
+		if (GameTiles[i] == nullptr)
+		{
 			int TileID = SelectTileFromLibrary();
 			FVector SpawnLocation = GetTileCoordinates(i);
-			CreateTile(TileLibrary[TileID].TileSprite, SpawnLocation, i, TileID);
+			CreateTile(TileLibrary[TileID].TileSprite, SpawnLocation, i, TileID, TileLibrary[TileID].IsBomb, TileLibrary[TileID].IsUnmovable);
+			if (TileLibrary[TileID].IsBomb) {
+				BombsCounter++;
+			}
 		}
 	}
+}
+
+void AGrid::BombExplode(ATile* Pressed) {
+	TArray<int> Coordinates = { 1, -1, 8, -8 };
+	for (int &i : Coordinates) {
+		int AddressToDel = Pressed->GridAddress + i;
+		if (AddressToDel >= 0) {
+			if (FMath::Abs(i) == 1 && AddressToDel / 8 == (Pressed->GridAddress) / 8)
+			{
+				if (!TilesToDel.Contains(GameTiles[AddressToDel]))
+				{
+					TilesToDel.Add(GameTiles[AddressToDel]);
+				}
+			}
+			if (FMath::Abs(i) == 8 && AddressToDel < 64)
+			{
+				if (!TilesToDel.Contains(GameTiles[AddressToDel]))
+				{
+					TilesToDel.Add(GameTiles[AddressToDel]);
+				}
+			}
+		}
+	}
+	if (!TilesToDel.Contains(Pressed))
+	{
+		TilesToDel.Add(Pressed);
+	}
+	DestroyTiles();
+}
+
+void AGrid::CopyCurrentToDeleting(TArray<ATile*> CurrentTiles) {
+	for (ATile* TileToDel : CurrentTiles)
+	{
+		if (!TilesToDel.Contains(TileToDel))
+		{
+			TilesToDel.Add(TileToDel);
+		}
+	}
+}
+
+bool AGrid::IsWinnable() {
+	if (BombsCounter) {
+		return true;
+	}
+	for (ATile* Tile : GameTiles) {
+		int TilePosition = Tile->GridAddress;
+		if (CheckMoveForValidityAndSwapBack(TilePosition, TilePosition + 1) ||
+			CheckMoveForValidityAndSwapBack(TilePosition, TilePosition - 1) ||
+			CheckMoveForValidityAndSwapBack(TilePosition, TilePosition + 8) ||
+			CheckMoveForValidityAndSwapBack(TilePosition, TilePosition - 8))
+			return true;
+	}
+	return false;
+}
+
+bool AGrid::CheckMoveForValidityAndSwapBack(int InitialFirstPosition, int InitialSecondPosition) {
+	if (AreValidAndNegihbors(InitialFirstPosition, InitialSecondPosition))
+	{
+		if (GameTiles[InitialFirstPosition]->IsBomb || GameTiles[InitialSecondPosition]->IsBomb ||
+			GameTiles[InitialFirstPosition]->IsUnmovable || GameTiles[InitialSecondPosition]->IsUnmovable)
+			return false;
+		if (IsValidMove(GameTiles[InitialFirstPosition], GameTiles[InitialSecondPosition]))
+		{
+			TilesToDel.Empty();
+			SwapTilePositionsInArray(GameTiles[InitialFirstPosition], GameTiles[InitialSecondPosition]);
+			return true;
+		}
+		else
+		{
+			SwapTilePositionsInArray(GameTiles[InitialFirstPosition], GameTiles[InitialSecondPosition]);
+		}
+	}
+	return false;
 }

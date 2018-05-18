@@ -16,6 +16,8 @@ public:
 
 	ATile();
 
+	void SetTileSprite(class UPaperSprite * TileSprite);
+
 	virtual void Tick(float DeltaTime) override;
 	
 	int GridAddress;
@@ -23,12 +25,12 @@ public:
 	int TileTypeID;
 
 	int TicksToMove = 0;
-		
-	UFUNCTION(BlueprintNativeEvent, Category = "Special Game Events")
-		void SetTileSprite(class UPaperSprite * TileSprite);
-		virtual void SetTileSprite_Implementation(class UPaperSprite * TileSprite);
 
-		class AGrid* Grid;
+	bool IsBomb;
+
+	bool IsUnmovable;
+		
+	class AGrid* Grid;
 
 	UFUNCTION()
 		void OnSelected(AActor* Target, FKey ButtonPressed);

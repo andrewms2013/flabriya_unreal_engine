@@ -25,12 +25,14 @@ void ATile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (TicksToMove > 0) {
+	if (TicksToMove > 0) 
+	{
 //		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString("EEEEEEEEEEEEEEEEE"));
 		FVector Location = GetActorLocation();
 		SetActorLocation(Location + MoveVector);
 		TicksToMove--;
-		if (TicksToMove == 0) {
+		if (TicksToMove == 0)
+		{
 			Grid->TilesAreBeingMoved.Remove(this);
 		}
 	}
@@ -39,13 +41,14 @@ void ATile::Tick(float DeltaTime)
 
 void ATile::OnSelected(AActor* Target, FKey ButtonPressed)
 {
-	if (!(Grid->SwapHappening) && !(Grid->FallHappening)) {
+	if (!(Grid->SwapHappening) && !(Grid->FallHappening)) 
+	{
 		Grid->TileMousePressed(this);
 	}
 }
 
 
-void ATile::SetTileSprite_Implementation(class UPaperSprite * TileSprite)
+void ATile::SetTileSprite(class UPaperSprite * TileSprite)
 {
 	GetRenderComponent()->SetSprite(TileSprite);
 }
