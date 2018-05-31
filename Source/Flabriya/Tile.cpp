@@ -41,7 +41,7 @@ void ATile::Tick(float DeltaTime)
 
 void ATile::OnSelected(AActor* Target, FKey ButtonPressed)
 {
-	if (!(Grid->SwapHappening) && !(Grid->FallHappening)) 
+	if (!(Grid->bSwapHappening) && !(Grid->bFallHappening) && (Grid->bRespondsToClicks))
 	{
 		Grid->TileMousePressed(this);
 	}

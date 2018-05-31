@@ -22,16 +22,16 @@ struct FTileType
 		class UPaperSprite * TilePressedSprite;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		bool IsBomb;
+		bool bIsBomb;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		bool IsUnmovable;
+		bool bIsUnmovable;
 
 	FTileType()
 	{
 		Probability = 1.0f;
-		bool IsBomb = false;
-		bool IsUnmovable = false;
+		bool bIsBomb = false;
+		bool bIsUnmovable = false;
 	}
 };
 
@@ -56,15 +56,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Initialization)
 		void InitGrid();
 
+	void TileMousePressed(ATile* Current);
 	ATile* CurrentlySelectedTile;
-
 	TArray<ATile*> TilesToDel;
-
 	TArray<ATile*> TilesAreBeingMoved;
 
-	bool SwapHappening = false;
-
-	bool FallHappening = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bRespondsToClicks = true;
+	
+	bool bSwapHappening = false;
+	bool bFallHappening = false;
+	bool bIsWinnable = true;
 
 	// Vector = 1/30 of TileSize;
 
@@ -73,49 +75,43 @@ public:
 	FVector MoveTileRight;
 	FVector MoveTileLeft;
 
-	virtual void Tick(float DeltaTime) override;
-
-	int SelectTileFromLibrary();
-
-	ATile* CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation, int SpawnGridAddress, int TileTypeID, bool IsBomb, bool IsUnmovable);
-
-	FVector GetTileCoordinates(int GridAdress);
-
-	void TileMousePressed(ATile* Current);
-
-	bool AreValidAndNegihbors(int InitialFirstPosition, int InitialSecondPosition);
-
-	void SwapTilePositionsInArray(ATile* First, ATile* Second);
-
-	bool IsValidMove(ATile* First, ATile* Second);
-
-	void SwapTilesInGame(ATile* First, ATile* Second);
-
-	void GetMatchedTilesInColoumnOrRow(int Coloumn, bool IsColoumn);
-
-	bool TileCompletesMatchOnStart(int GridAddress, int TileTypeIDs);
-
-	void DestroyTiles();
-
-	void ShiftTiles(int AdressWithNoTile);
-
-	void SpawnNewTiles();
-
-	void CheckForMatches();
-
 	// Lower value -> Faster
 
 	const int TileSpeed = 7;
 
-	void BombExplode(ATile* Pressed);
-
-	bool IsWinnable();
-
-	bool CheckMoveForValidityAndSwapBack(int InitialFirstPosition, int InitialSecondPosition);
+	static void SetGridRespondable(bool bIsRespondable, UWorld* World);
 
 private:
 
-	int BombsCounter = 0;
+	virtual void Tick(float DeltaTime) override;
 
+	const int GridHeight = 8;
+	const int GridWidth = 8;
+
+	ATile* CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation, int SpawnGridAddress, int TileTypeID, bool bIsBomb, bool bIsUnmovable);
+	int SelectTileFromLibrary();
+	FVector GetTileCoordinates(int GridAdress);
+
+	bool AreValidAndNegihbors(int InitialFirstPosition, int InitialSecondPosition);
+	bool IsValidMove(ATile* First, ATile* Second);
+	void SwapTilePositionsInArray(ATile* First, ATile* Second);
+	void SwapTilesInGame(ATile* First, ATile* Second);
+	void GetMatchedTilesInColoumnOrRow(int Coloumn, bool bIsColoumn);
+	bool CheckMoveForValidityAndSwapBack(int InitialFirstPosition, int InitialSecondPosition);
+
+	bool TileCompletesMatchOnStart(int GridAddress, int TileTypeIDs);
+	void ChechForBeingWinnable();
+
+	void SetDestroyingTilesColoutredThanDestroy();
+	void DestroyTiles();
+	void ShiftTiles(int AdressWithNoTile);
+
+	void SpawnNewTiles();
+	void CheckForMatches();
+
+	void BombExplode(ATile* Pressed);
+
+	int BombsCounter = 0;
 	void CopyCurrentToDeleting(TArray<ATile*> CurrentTiles);
+
 };

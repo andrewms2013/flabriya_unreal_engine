@@ -26,9 +26,9 @@ public:
 
 	int TicksToMove = 0;
 
-	bool IsBomb;
+	bool bIsBomb;
 
-	bool IsUnmovable;
+	bool bIsUnmovable;
 		
 	class AGrid* Grid;
 
