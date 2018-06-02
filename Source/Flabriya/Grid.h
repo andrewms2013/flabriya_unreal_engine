@@ -56,6 +56,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Initialization)
 		void InitGrid();
 
+	UFUNCTION(BlueprintCallable, Category = Initialization)
+		void InitFromLoaded(TArray<int32> TilesNumbers);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bIsEndless;
+
 	void TileMousePressed(ATile* Current);
 	ATile* CurrentlySelectedTile;
 	TArray<ATile*> TilesToDel;
@@ -77,41 +83,42 @@ public:
 
 	// Lower value -> Faster
 
-	const int TileSpeed = 7;
+	const int32 TileSpeed = 7;
 
 	static void SetGridRespondable(bool bIsRespondable, UWorld* World);
+	static TArray<ATile*> GetGridTiles (UWorld* World);
 
 private:
 
 	virtual void Tick(float DeltaTime) override;
 
-	const int GridHeight = 8;
-	const int GridWidth = 8;
+	const int32 GridHeight = 8;
+	const int32 GridWidth = 8;
 
-	ATile* CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation, int SpawnGridAddress, int TileTypeID, bool bIsBomb, bool bIsUnmovable);
-	int SelectTileFromLibrary();
-	FVector GetTileCoordinates(int GridAdress);
+	ATile* CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation, int32 SpawnGridAddress, int32 TileTypeID, bool bIsBomb, bool bIsUnmovable);
+	int32 SelectTileFromLibrary();
+	FVector GetTileCoordinates(int32 GridAdress);
 
-	bool AreValidAndNegihbors(int InitialFirstPosition, int InitialSecondPosition);
+	bool AreValidAndNegihbors(int32 InitialFirstPosition, int32 InitialSecondPosition);
 	bool IsValidMove(ATile* First, ATile* Second);
 	void SwapTilePositionsInArray(ATile* First, ATile* Second);
 	void SwapTilesInGame(ATile* First, ATile* Second);
-	void GetMatchedTilesInColoumnOrRow(int Coloumn, bool bIsColoumn);
-	bool CheckMoveForValidityAndSwapBack(int InitialFirstPosition, int InitialSecondPosition);
+	void GetMatchedTilesInColoumnOrRow(int32 Coloumn, bool bIsColoumn);
+	bool CheckMoveForValidityAndSwapBack(int32 InitialFirstPosition, int32 InitialSecondPosition);
 
-	bool TileCompletesMatchOnStart(int GridAddress, int TileTypeIDs);
+	bool TileCompletesMatchOnStart(int32 GridAddress, int32 TileTypeIDs);
 	void ChechForBeingWinnable();
 
 	void SetDestroyingTilesColoutredThanDestroy();
 	void DestroyTiles();
-	void ShiftTiles(int AdressWithNoTile);
+	void ShiftTiles(int32 AdressWithNoTile);
 
 	void SpawnNewTiles();
 	void CheckForMatches();
 
 	void BombExplode(ATile* Pressed);
 
-	int BombsCounter = 0;
+	int32 BombsCounter = 0;
 	void CopyCurrentToDeleting(TArray<ATile*> CurrentTiles);
 
 };

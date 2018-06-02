@@ -15,14 +15,25 @@ public:
 	// Sets default values for this actor's properties
 	AScoreCounter();
 
+	UFUNCTION(BlueprintCallable, Category = Initialization)
+		void InitScoreCounter();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		int ScoreToWin;
+		int32 ScoreToWin;
 	
-	int Score = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bIsEndless;
+
+	int32 Score = 0;
+
+	void CheckIfWon();
 
 	static void AddOnePoint(UWorld* World);
 
+	static int32 GetScore(UWorld* World);
+
+private:
+
 	void PrintScoreToRenderComponent();
 
-	void CheckIfWon();
 };

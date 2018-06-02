@@ -16,6 +16,11 @@ AScoreCounter::AScoreCounter()
 
 }
 
+void AScoreCounter::InitScoreCounter()
+{
+	PrintScoreToRenderComponent();
+}
+
 void AScoreCounter::AddOnePoint(UWorld* World)
 {
 	for (TObjectIterator<AScoreCounter> Itr; Itr; ++Itr)
@@ -26,7 +31,10 @@ void AScoreCounter::AddOnePoint(UWorld* World)
 		}
 		Itr->Score++;
 		Itr->PrintScoreToRenderComponent();
-		Itr->CheckIfWon();
+		if (!(Itr->bIsEndless))
+		{
+			Itr->CheckIfWon();
+		}
 	}
 }
 
@@ -34,8 +42,11 @@ void AScoreCounter::PrintScoreToRenderComponent()
 {
 	FString ScoreString("Score: ");
 	ScoreString += FString::FromInt(Score);
-	ScoreString += FString("/");
-	ScoreString += FString::FromInt(ScoreToWin);
+	if (!bIsEndless)
+	{
+		ScoreString += FString("/");
+		ScoreString += FString::FromInt(ScoreToWin);
+	}
 	TArray<UTextRenderComponent*> StaticComps;
 	GetComponents<UTextRenderComponent>(StaticComps);
 	if (StaticComps.IsValidIndex(0))
@@ -53,4 +64,17 @@ void AScoreCounter::CheckIfWon()
 		AOpenSettingButton::SetButtonRespondable(false, GetWorld());
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
 	}
+}
+
+
+int32 AScoreCounter::GetScore(UWorld* World)
+{
+	for (TObjectIterator<AScoreCounter> Itr; Itr; ++Itr)
+	{
+		if (Itr->GetWorld() != World) {
+			continue;
+		}
+		return Itr->Score;
+	}
+	return 0;
 }

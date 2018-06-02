@@ -13,15 +13,13 @@ ATimer::ATimer()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-
 }
 
-// Called when the game starts or when spawned
-void ATimer::BeginPlay()
-{
-	Super::BeginPlay();
+void ATimer::InitTimer() {
 
+	PrintTimeToRenderComponent();
 	GetWorldTimerManager().SetTimer(GameTimer, this, &ATimer::AdvanceTimer, 1.0f, true);
+
 }
 
 void ATimer::AdvanceTimer() 
@@ -60,4 +58,17 @@ void ATimer::PrintTimeToRenderComponent()
 	}
 }
 
+
+int32 ATimer::GetTimerLeftSeconds(UWorld* World) 
+{
+	for (TObjectIterator<ATimer> Itr; Itr; ++Itr)
+	{
+		if (Itr->GetWorld() != World)
+		{
+			continue;
+		}
+		return Itr->TimeLeftSeconds;
+	}
+	return 0;
+}
 

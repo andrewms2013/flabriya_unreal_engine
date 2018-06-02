@@ -16,16 +16,22 @@ public:
 	ATimer();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		int TimeLeftSeconds;
+		bool bIsEndless;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 TimeLeftSeconds;
+
+	UFUNCTION(BlueprintCallable, Category = Initialization)
+		void InitTimer();
 
 	FTimerHandle GameTimer;
 
 	void AdvanceTimer();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	static int32 GetTimerLeftSeconds(UWorld* World);
 	
 private:
+
 	void PrintTimeToRenderComponent();
+
 };

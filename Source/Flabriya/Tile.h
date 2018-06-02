@@ -20,11 +20,11 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 	
-	int GridAddress;
+	int32 GridAddress;
 
-	int TileTypeID;
+	int32 TileTypeID;
 
-	int TicksToMove = 0;
+	int32 TicksToMove = 0;
 
 	bool bIsBomb;
 
