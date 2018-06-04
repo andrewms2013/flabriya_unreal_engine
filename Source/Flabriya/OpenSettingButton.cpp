@@ -19,7 +19,19 @@ void AOpenSettingButton::OnSelected(AActor* Target, FKey ButtonPressed)
 {
 	if (bRespondsToClicks) 
 	{
-		FStringClassReference MyWidgetClassRef(TEXT("/Game/InGameWidgets/SettingsMenu.SettingsMenu_C"));
+		FStringClassReference MyWidgetClassRef;
+		if (GetWorld()->GetName() == "FlabriyaLevel" || GetWorld()->GetName() == "EndlessLevel")
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/SettingsMenuPink.SettingsMenuPink_C"));
+		}
+		else if (GetWorld()->GetName() == "SirenLevel")
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/SettingsMenuGreen.SettingsMenuGreen_C"));
+		}
+		else
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/SettingsMenuBrown.SettingsMenuBrown_C"));
+		}
 		APlayerController * MyPlayer = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		if (UClass* MyWidgetClass = MyWidgetClassRef.TryLoadClass<UUserWidget>())
 		{

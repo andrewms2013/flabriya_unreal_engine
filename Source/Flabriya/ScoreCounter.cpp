@@ -4,6 +4,7 @@
 #include "EngineUtils.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Runtime/Engine/Classes/Components/TextRenderComponent.h"
+#include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 #include "OpenSettingButton.h"
 #include "Grid.h"
 #include "Engine.h"
@@ -63,6 +64,25 @@ void AScoreCounter::CheckIfWon()
 		AGrid::SetGridRespondable(false, GetWorld());
 		AOpenSettingButton::SetButtonRespondable(false, GetWorld());
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
+		FStringClassReference MyWidgetClassRef;
+		if (GetWorld()->GetName() == "FlabriyaLevel")
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LevelWonPink.LevelWonPink_C"));
+		}
+		else if (GetWorld()->GetName() == "SirenLevel")
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LevelWonGreen.LevelWonGreen_C"));
+		}
+		else
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LevelWonBrown.LevelWonBrown_C"));
+		}
+		APlayerController * MyPlayer = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (UClass* MyWidgetClass = MyWidgetClassRef.TryLoadClass<UUserWidget>())
+		{
+			UUserWidget* MyWidget = CreateWidget<UUserWidget>(MyPlayer, MyWidgetClass);
+			MyWidget->AddToViewport();
+		}
 	}
 }
 

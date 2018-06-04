@@ -6,6 +6,7 @@
 #include "Grid.h"
 #include "EngineUtils.h"
 #include "Runtime/Engine/Classes/Components/TextRenderComponent.h"
+#include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 #include "OpenSettingButton.h"
 
 // Sets default values
@@ -32,6 +33,29 @@ void ATimer::AdvanceTimer()
 		AGrid::SetGridRespondable(false, GetWorld());
 		AOpenSettingButton::SetButtonRespondable(false, GetWorld());
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
+		FStringClassReference MyWidgetClassRef;
+		if (GetWorld()->GetName() == "FlabriyaLevel")
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LevelLostPink.LevelLostPink_C"));
+		}
+		else if (GetWorld()->GetName() == "SirenLevel")
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LevelLostGreen.LevelLostGreen_C"));
+		}
+		else if (GetWorld()->GetName() == "EndlessLevel")
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LevelWonEndless.LevelWonEndless_C"));
+		}
+		else
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LevelLostBrown.LevelLostBrown_C"));
+		}
+		APlayerController * MyPlayer = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (UClass* MyWidgetClass = MyWidgetClassRef.TryLoadClass<UUserWidget>())
+		{
+			UUserWidget* MyWidget = CreateWidget<UUserWidget>(MyPlayer, MyWidgetClass);
+			MyWidget->AddToViewport();
+		}
 	}
 }
 

@@ -4,6 +4,7 @@
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
+#include "FlabriyaSaveProgress.h"
 #include "FlabriyaSaveGame.h"
 #include "ScoreCounter.h"
 #include "Grid.h"
@@ -31,21 +32,35 @@ void UFlabryaGameInstance::SaveGame()
 	SaveGameInstance->GameTiles = TilesNumbers;
 	SaveGameInstance->SecondsLeft = TimeToSave;
 	SaveGameInstance->Score = Score;
-	UGameplayStatics::SaveGameToSlot(SaveGameInstance, PlayerName, 0);
+	FString SlotName = PlayerName + FString("Save");
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SlotName, 0);
 }
 
 void UFlabryaGameInstance::SetForLoadAndOpenLevel()
 {
 	UFlabriyaSaveGame* LoadGameInstance = Cast<UFlabriyaSaveGame>(UGameplayStatics::CreateSaveGameObject(UFlabriyaSaveGame::StaticClass()));
-	if (UGameplayStatics::LoadGameFromSlot(PlayerName, 0)) {
-		LoadGameInstance = Cast<UFlabriyaSaveGame>(UGameplayStatics::LoadGameFromSlot(PlayerName, 0));
+	FString SlotName = PlayerName + FString("Save");
+	if (UGameplayStatics::LoadGameFromSlot(SlotName, 0)) {
+		LoadGameInstance = Cast<UFlabriyaSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
 		FString Level = LoadGameInstance->LevelName;
 		bIsLoads = true;
 		UGameplayStatics::OpenLevel(GetWorld(), FName(*Level));
 	}
 	else
 	{
-		FStringClassReference MyWidgetClassRef(TEXT("/Game/InGameWidgets/LoadFailed.LoadFailed_C"));
+		FStringClassReference MyWidgetClassRef;
+		if (GetWorld()->GetName() == "FlabriyaLevel" || GetWorld()->GetName() == "EndlessLevel")
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LoadFailedPink.LoadFailedPink_C"));
+		}
+		else if (GetWorld()->GetName() == "MainMenu" || GetWorld()->GetName() == "SirenLevel")
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LoadFailedGreen.LoadFailedGreen_C"));
+		}
+		else
+		{
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LoadFailedBrown.LoadFailedBrown_C"));
+		}
 		APlayerController * MyPlayer = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		if (UClass* MyWidgetClass = MyWidgetClassRef.TryLoadClass<UUserWidget>())
 		{
@@ -57,7 +72,8 @@ void UFlabryaGameInstance::SetForLoadAndOpenLevel()
 
 void UFlabryaGameInstance::LoadGame() {
 	UFlabriyaSaveGame* LoadGameInstance = Cast<UFlabriyaSaveGame>(UGameplayStatics::CreateSaveGameObject(UFlabriyaSaveGame::StaticClass()));
-	LoadGameInstance = Cast<UFlabriyaSaveGame>(UGameplayStatics::LoadGameFromSlot(PlayerName, 0));
+	FString SlotName = PlayerName + FString("Save");
+	LoadGameInstance = Cast<UFlabriyaSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
 	TArray<int32> TilesNumbers = LoadGameInstance->GameTiles;
 	for (TObjectIterator<AGrid> Itr; Itr; ++Itr)
 	{
@@ -88,7 +104,7 @@ void UFlabryaGameInstance::LoadGame() {
 	bIsLoads = false;
 }
 
-void UFlabryaGameInstance::EnterName() 
+void UFlabryaGameInstance::EnterNameAndOpenMenu()
 {
 	if (!bIsNameWritten)
 	{
@@ -100,5 +116,35 @@ void UFlabryaGameInstance::EnterName()
 			MyWidget->AddToViewport();
 			bIsNameWritten = true;
 		}
+	}
+	else
+	{
+		FStringClassReference MyWidgetClassRef(TEXT("/Game/MainMenu/MainMenuWidget.MainMenuWidget_C"));
+		APlayerController * MyPlayer = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (UClass* MyWidgetClass = MyWidgetClassRef.TryLoadClass<UUserWidget>())
+		{
+			UUserWidget* MyWidget = CreateWidget<UUserWidget>(MyPlayer, MyWidgetClass);
+			MyWidget->AddToViewport();
+		}
+	}
+}
+
+void UFlabryaGameInstance::SaveProgress(int32 LvlWon)
+{
+	UFlabriyaSaveProgress* SaveGameInstance = Cast<UFlabriyaSaveProgress>(UGameplayStatics::CreateSaveGameObject(UFlabriyaSaveProgress::StaticClass()));
+	SaveGameInstance->LevelsWon = LvlWon;
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, PlayerName, 0);
+}
+
+void UFlabryaGameInstance::LoadProgress()
+{
+	UFlabriyaSaveProgress* LoadGameInstance = Cast<UFlabriyaSaveProgress>(UGameplayStatics::CreateSaveGameObject(UFlabriyaSaveProgress::StaticClass()));
+	if (UGameplayStatics::LoadGameFromSlot(PlayerName, 0)) {
+		LoadGameInstance = Cast<UFlabriyaSaveProgress>(UGameplayStatics::LoadGameFromSlot(PlayerName, 0));
+		LevelsWon = LoadGameInstance->LevelsWon;
+	}
+	else
+	{
+		LevelsWon = 0;
 	}
 }

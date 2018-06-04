@@ -19,6 +19,9 @@ public:
 	UFlabryaGameInstance();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 LevelsWon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		FString PlayerName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -37,5 +40,11 @@ public:
 		void LoadGame();
 
 	UFUNCTION(BlueprintCallable, Category = Initialization)
-		void EnterName();
+		void EnterNameAndOpenMenu();
+
+	UFUNCTION(BlueprintCallable, Category = Initialization)
+		void SaveProgress(int32 LvlWon);
+
+	UFUNCTION(BlueprintCallable, Category = Initialization)
+		void LoadProgress();
 };
