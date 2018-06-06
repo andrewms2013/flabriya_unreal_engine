@@ -4,10 +4,12 @@
 #include "Runtime/Engine/Public/TimerManager.h"
 #include "Engine.h"
 #include "Grid.h"
+#include "ScoreCounter.h"
 #include "EngineUtils.h"
 #include "Runtime/Engine/Classes/Components/TextRenderComponent.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 #include "OpenSettingButton.h"
+#include "FlabryaGameInstance.h"
 
 // Sets default values
 ATimer::ATimer()
@@ -44,6 +46,11 @@ void ATimer::AdvanceTimer()
 		}
 		else if (GetWorld()->GetName() == "EndlessLevel")
 		{
+			FLeader Leader;
+			UFlabryaGameInstance * Instance = (UFlabryaGameInstance *)GetGameInstance();
+			Leader.Name = Instance->PlayerName;
+			Leader.Score = AScoreCounter::GetScore(GetWorld());
+			Instance->AddLeader(Leader);
 			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/LevelWonEndless.LevelWonEndless_C"));
 		}
 		else

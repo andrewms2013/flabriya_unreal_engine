@@ -62,6 +62,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool bIsEndless;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundBase* OnClick;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundBase* Match;
+
 	void TileMousePressed(ATile* Current);
 	ATile* CurrentlySelectedTile;
 	TArray<ATile*> TilesToDel;

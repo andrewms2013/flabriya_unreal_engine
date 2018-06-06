@@ -10,36 +10,56 @@
 
 AOpenSettingButton::AOpenSettingButton() 
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
+
+	bRespondsToClicks = true;
+
+	if (RootComponent)
+	{
+		RootComponent->SetMobility(EComponentMobility::Movable);
+	}
 
 	OnClicked.AddUniqueDynamic(this, &AOpenSettingButton::OnSelected);
+	OnBeginCursorOver.AddUniqueDynamic(this, &AOpenSettingButton::OnMouseOver);
+	OnEndCursorOver.AddUniqueDynamic(this, &AOpenSettingButton::OnMouseOverFinished);
 }
 
 void AOpenSettingButton::OnSelected(AActor* Target, FKey ButtonPressed)
 {
 	if (bRespondsToClicks) 
 	{
-		FStringClassReference MyWidgetClassRef;
-		if (GetWorld()->GetName() == "FlabriyaLevel" || GetWorld()->GetName() == "EndlessLevel")
+		AGrid * Grid = nullptr;
+		UGameplayStatics::PlaySound2D(GetWorld(), OnClick);
+		for (TObjectIterator<AGrid> Itr; Itr; ++Itr)
 		{
-			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/SettingsMenuPink.SettingsMenuPink_C"));
+			if (Itr->GetWorld() != GetWorld()) {
+				continue;
+			}
+			Grid = (*Itr);
 		}
-		else if (GetWorld()->GetName() == "SirenLevel")
-		{
-			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/SettingsMenuGreen.SettingsMenuGreen_C"));
-		}
-		else
-		{
-			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/SettingsMenuBrown.SettingsMenuBrown_C"));
-		}
-		APlayerController * MyPlayer = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-		if (UClass* MyWidgetClass = MyWidgetClassRef.TryLoadClass<UUserWidget>())
-		{
-			AGrid::SetGridRespondable(false, GetWorld());
-			AOpenSettingButton::SetButtonRespondable(false, GetWorld());
-			UGameplayStatics::SetGamePaused(GetWorld(), true);
-			UUserWidget* MyWidget = CreateWidget<UUserWidget>(MyPlayer, MyWidgetClass);
-			MyWidget->AddToViewport();
+		if (Grid && !(Grid->bSwapHappening) && !(Grid->bFallHappening) && (Grid->bRespondsToClicks)) {
+			FStringClassReference MyWidgetClassRef;
+			if (GetWorld()->GetName() == "FlabriyaLevel" || GetWorld()->GetName() == "EndlessLevel")
+			{
+				MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/SettingsMenuPink.SettingsMenuPink_C"));
+			}
+			else if (GetWorld()->GetName() == "SirenLevel")
+			{
+				MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/SettingsMenuGreen.SettingsMenuGreen_C"));
+			}
+			else
+			{
+				MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/SettingsMenuBrown.SettingsMenuBrown_C"));
+			}
+			APlayerController * MyPlayer = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+			if (UClass* MyWidgetClass = MyWidgetClassRef.TryLoadClass<UUserWidget>())
+			{
+				AGrid::SetGridRespondable(false, GetWorld());
+				AOpenSettingButton::SetButtonRespondable(false, GetWorld());
+				UGameplayStatics::SetGamePaused(GetWorld(), true);
+				UUserWidget* MyWidget = CreateWidget<UUserWidget>(MyPlayer, MyWidgetClass);
+				MyWidget->AddToViewport();
+			}
 		}
 	}
 }
@@ -54,4 +74,15 @@ void AOpenSettingButton::SetButtonRespondable(bool bIsRespondable, UWorld* World
 		}
 		Itr->bRespondsToClicks = bIsRespondable;
 	}
+}
+
+void AOpenSettingButton::OnMouseOver(AActor* Target)
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), OnHovered);
+	GetRenderComponent()->SetSprite(ButtonHoveredSprite);
+}
+
+void AOpenSettingButton::OnMouseOverFinished(AActor* Target)
+{
+	GetRenderComponent()->SetSprite(ButtonSprite);
 }

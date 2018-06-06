@@ -7,4 +7,3 @@ UFlabriyaSaveProgress::UFlabriyaSaveProgress()
 {
 
 }
-

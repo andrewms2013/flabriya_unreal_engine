@@ -30,7 +30,8 @@ void AGrid::Tick(float DeltaTime)
 			ChechForBeingWinnable();
 			if (!bIsWinnable)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString("Is Unwinnable"));
+				InitGrid();
+				bIsWinnable = true;
 			}
 			CheckForMatches();
 			bFallHappening = false;
@@ -179,6 +180,7 @@ int32 AGrid::SelectTileFromLibrary()
 
 void AGrid::TileMousePressed(ATile* Pressed)
 {
+	UGameplayStatics::PlaySound2D(GetWorld(), OnClick);
 	if (Pressed->bIsUnmovable || Pressed->bIsBomb) 
 	{
 		if (CurrentlySelectedTile != nullptr)
@@ -393,6 +395,7 @@ bool AGrid::TileCompletesMatchOnStart(int32 GridAddress, int32 TileTypeID)
 void AGrid::SetDestroyingTilesColoutredThanDestroy()
 {
 	bRespondsToClicks = false;
+	UGameplayStatics::PlaySound2D(GetWorld(), Match);
 	for (ATile* TileToDel : TilesToDel)
 	{
 		TileToDel->SetTileSprite(TileLibrary[TileToDel->TileTypeID].TilePressedSprite);

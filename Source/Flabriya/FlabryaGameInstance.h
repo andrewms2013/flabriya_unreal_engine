@@ -9,6 +9,21 @@
 /**
  * 
  */
+
+USTRUCT(BlueprintType)
+struct FLeader
+{
+	GENERATED_USTRUCT_BODY();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FString Name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		int32 Score;
+
+};
+
+
 UCLASS()
 class FLABRIYA_API UFlabryaGameInstance : public UGameInstance
 {
@@ -28,10 +43,19 @@ public:
 		bool bIsNameWritten = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		bool bIsLoads = false;
+		bool bIsLoading = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bIsSoundOn = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<FLeader> Leaders;
 
 	UFUNCTION(BlueprintCallable, Category = Initialization)
 		void SaveGame();
+
+	UFUNCTION(BlueprintCallable, Category = Initialization)
+		void RemoveTopLeaders();
 
 	UFUNCTION(BlueprintCallable, Category = Initialization)
 		void SetForLoadAndOpenLevel();
@@ -47,4 +71,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = Initialization)
 		void LoadProgress();
+
+	UFUNCTION(BlueprintCallable, Category = Initialization)
+		void AddLeader(FLeader Leader);
+
+	UFUNCTION(BlueprintCallable, Category = Initialization)
+		FString LeadersToString();
+
 };

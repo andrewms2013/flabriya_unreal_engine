@@ -27,7 +27,6 @@ void ATile::Tick(float DeltaTime)
 
 	if (TicksToMove > 0) 
 	{
-//		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString("EEEEEEEEEEEEEEEEE"));
 		FVector Location = GetActorLocation();
 		SetActorLocation(Location + MoveVector);
 		TicksToMove--;

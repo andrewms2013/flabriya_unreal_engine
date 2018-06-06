@@ -21,8 +21,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		bool bRespondsToClicks = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UPaperSprite * ButtonSprite;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UPaperSprite * ButtonHoveredSprite;
+
 	UFUNCTION()
 		void OnSelected(AActor* Target, FKey ButtonPressed);
+
+	UFUNCTION()
+		void OnMouseOver(AActor* Target);
+
+	UFUNCTION()
+		void OnMouseOverFinished(AActor* Target);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundBase* OnClick;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		USoundBase* OnHovered;
 
 	static void SetButtonRespondable(bool bIsRespondable, UWorld* World);
 };
