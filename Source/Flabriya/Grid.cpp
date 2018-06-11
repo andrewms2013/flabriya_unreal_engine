@@ -6,6 +6,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "PaperSpriteComponent.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
+#include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 #include "Engine.h"
 #include "EngineUtils.h"
 #include "ScoreCounter.h"
@@ -55,8 +56,6 @@ ATile* AGrid::CreateTile(class UPaperSprite * TileSprite, FVector SpawnLocation,
 		UWorld* const World = GetWorld();
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = this;
-		SpawnParams.Instigator = Instigator;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		FRotator SpawnRotation(0.0f, 0.0f, 0.0f);
 		ATile* const NewTile = World->SpawnActor<ATile>(TileClass, SpawnLocation, SpawnRotation, SpawnParams);
 		NewTile->GetRenderComponent()->SetMobility(EComponentMobility::Movable);
@@ -187,6 +186,17 @@ void AGrid::TileMousePressed(ATile* Pressed)
 		{
 			CurrentlySelectedTile->SetTileSprite(TileLibrary[CurrentlySelectedTile->TileTypeID].TileSprite);
 			CurrentlySelectedTile = nullptr;
+		}
+		if (Pressed->bIsUnmovable)
+		{
+			FStringClassReference MyWidgetClassRef;
+			MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/TileIsUnmovable.TileIsUnmovable_C"));
+			if (UClass* MyWidgetClass = MyWidgetClassRef.TryLoadClass<UUserWidget>()) 
+			{
+				APlayerController * MyPlayer = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+				UUserWidget* MyWidget = CreateWidget<UUserWidget>(MyPlayer, MyWidgetClass);
+				MyWidget->AddToViewport();
+			}
 		}
 		if (Pressed->bIsBomb) 
 		{
@@ -412,6 +422,14 @@ void AGrid::SetDestroyingTilesColoutredThanDestroy()
 				continue;
 			}
 			Itr->TimeLeftSeconds++;
+		}
+		FStringClassReference MyWidgetClassRef;
+		MyWidgetClassRef.SetPath(TEXT("/Game/InGameWidgets/PlusOneSec.PlusOneSec_C"));
+		if (UClass* MyWidgetClass = MyWidgetClassRef.TryLoadClass<UUserWidget>())
+		{
+			APlayerController * MyPlayer = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+			UUserWidget* MyWidget = CreateWidget<UUserWidget>(MyPlayer, MyWidgetClass);
+			MyWidget->AddToViewport();
 		}
 	}
 	FTimerHandle DestroyTimerHandle;

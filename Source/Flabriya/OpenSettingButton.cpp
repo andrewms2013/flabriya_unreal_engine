@@ -78,11 +78,17 @@ void AOpenSettingButton::SetButtonRespondable(bool bIsRespondable, UWorld* World
 
 void AOpenSettingButton::OnMouseOver(AActor* Target)
 {
-	UGameplayStatics::PlaySound2D(GetWorld(), OnHovered);
-	GetRenderComponent()->SetSprite(ButtonHoveredSprite);
+	if (!(GetWorld()->IsPaused())) {
+		UGameplayStatics::PlaySound2D(GetWorld(), OnHovered);
+		GetRenderComponent()->SetSprite(ButtonHoveredSprite);
+	}
 }
 
 void AOpenSettingButton::OnMouseOverFinished(AActor* Target)
 {
+	if (!(GetWorld()->IsPaused())) {
+		UGameplayStatics::PlaySound2D(GetWorld(), OnHovered);
+		GetRenderComponent()->SetSprite(ButtonHoveredSprite);
+	}
 	GetRenderComponent()->SetSprite(ButtonSprite);
 }
