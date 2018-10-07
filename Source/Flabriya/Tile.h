@@ -35,5 +35,8 @@ public:
 	UFUNCTION()
 		void OnSelected(AActor* Target, FKey ButtonPressed);
 
+	UFUNCTION()
+		void OnSelectedTouch(ETouchIndex::Type FingerIndex, AActor* TouchedActor);
+
 	FVector MoveVector;
 };

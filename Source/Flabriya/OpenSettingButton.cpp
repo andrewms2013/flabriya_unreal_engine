@@ -6,6 +6,7 @@
 #include "Engine.h"
 #include "Grid.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
+#include "Runtime/Engine/Classes/Components/PrimitiveComponent.h"
 #include "EngineUtils.h"
 
 AOpenSettingButton::AOpenSettingButton() 
@@ -22,6 +23,7 @@ AOpenSettingButton::AOpenSettingButton()
 	OnClicked.AddUniqueDynamic(this, &AOpenSettingButton::OnSelected);
 	OnBeginCursorOver.AddUniqueDynamic(this, &AOpenSettingButton::OnMouseOver);
 	OnEndCursorOver.AddUniqueDynamic(this, &AOpenSettingButton::OnMouseOverFinished);
+	OnInputTouchBegin.AddUniqueDynamic(this, &AOpenSettingButton::OnSelectedTouch);
 }
 
 void AOpenSettingButton::OnSelected(AActor* Target, FKey ButtonPressed)
@@ -62,6 +64,11 @@ void AOpenSettingButton::OnSelected(AActor* Target, FKey ButtonPressed)
 			}
 		}
 	}
+}
+
+void AOpenSettingButton::OnSelectedTouch(ETouchIndex::Type FingerIndex, AActor* TouchedActor) {
+	FKey ButtonPressed;
+	this->OnSelected(TouchedActor, ButtonPressed);
 }
 
 void AOpenSettingButton::SetButtonRespondable(bool bIsRespondable, UWorld* World) 

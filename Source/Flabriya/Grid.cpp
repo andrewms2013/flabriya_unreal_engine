@@ -31,6 +31,16 @@ void AGrid::Tick(float DeltaTime)
 			ChechForBeingWinnable();
 			if (!bIsWinnable)
 			{
+				for (ATile* TileToDel : GameTiles)
+				{
+					int32 AddressOfTileToDestroy = TileToDel->GridAddress;
+					if (TilesAreBeingMoved.Contains(TileToDel))
+					{
+						TilesAreBeingMoved.Remove(TileToDel);
+					}
+					GameTiles[AddressOfTileToDestroy] = nullptr;
+					TileToDel->Destroy();
+				}
 				InitGrid();
 				bIsWinnable = true;
 			}

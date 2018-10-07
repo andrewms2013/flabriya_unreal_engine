@@ -89,7 +89,7 @@ public:
 
 	// Lower value -> Faster
 
-	const int32 TileSpeed = 7;
+	const int32 TileSpeed = 4;
 
 	static void SetGridRespondable(bool bIsRespondable, UWorld* World);
 	static TArray<ATile*> GetGridTiles (UWorld* World);

@@ -19,6 +19,7 @@ ATile::ATile()
 	}
 
 	OnClicked.AddUniqueDynamic(this, &ATile::OnSelected);
+	OnInputTouchBegin.AddUniqueDynamic(this, &ATile::OnSelectedTouch);
 }
 
 void ATile::Tick(float DeltaTime)
@@ -44,6 +45,11 @@ void ATile::OnSelected(AActor* Target, FKey ButtonPressed)
 	{
 		Grid->TileMousePressed(this);
 	}
+}
+
+void ATile::OnSelectedTouch(ETouchIndex::Type FingerIndex, AActor* TouchedActor) {
+	FKey ButtonPressed;
+	this->OnSelected(TouchedActor, ButtonPressed);
 }
 
 

@@ -8,6 +8,8 @@ AFlabriyaGameController::AFlabriyaGameController()
 	PrimaryActorTick.bCanEverTick = true;
 	bShowMouseCursor = true;
 	bEnableClickEvents = true;
+	bEnableTouchEvents = true;
 	bEnableMouseOverEvents = true;
+	bEnableTouchOverEvents = true;
 }
 

@@ -31,6 +31,9 @@ public:
 		void OnSelected(AActor* Target, FKey ButtonPressed);
 
 	UFUNCTION()
+		void OnSelectedTouch(ETouchIndex::Type FingerIndex, AActor* TouchedActor);
+
+	UFUNCTION()
 		void OnMouseOver(AActor* Target);
 
 	UFUNCTION()
